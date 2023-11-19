@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  bookapi:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data # Mount a local directory to store the SQLite database file
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:sqlite:/data/mydatabase.db
