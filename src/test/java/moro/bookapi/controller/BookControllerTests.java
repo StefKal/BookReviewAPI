@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 class BookControllerTests {
@@ -75,5 +76,38 @@ class BookControllerTests {
         assertNotNull(response);
         assertEquals(1, response.get("count"));
     }
+     @Test
+    void getBooksEmptyTitleTest() {
+        // Mock external API response for empty title
+        String mockApiResponse = "{ \"count\": 0, \"results\": [] }";
+        when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn(mockApiResponse);
 
+        // Call getBooks method with empty title
+        Map<String, Object> response = bookController.getBooks("", 1);
+
+        // Assertions
+        assertEquals(0, response.get("count"));
+    }
+
+    @Test
+    void getBooksInvalidPageTest() {
+        Map<String, Object> response = bookController.getBooks("Test Book", -1);
+        // Check if the "error" key exists in the response
+        assertTrue(response.containsKey("error"));
+
+        // Check if the value of the "error" key equals the expected error message
+        assertEquals("Page number must be a positive integer", response.get("error"));    
+    }
+
+    @Test
+    void getBooksExceptionHandlingTest() {
+        // Simulate a RestClientException
+        when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new RestClientException("Error"));
+
+        // Call getBooks method and expect an error response
+        Map<String, Object> response = bookController.getBooks("Test Book", 1);
+
+        // Assertions
+        assertTrue(response.containsKey("error"));
+    }
 }
