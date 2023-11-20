@@ -145,6 +145,37 @@ public class BookController {
         return authorDtos;
     }
 
+    @ApiResponse(responseCode = "200", description = "Successful response", 
+            content = @Content(
+                mediaType = "application/json", 
+                schema = @Schema(implementation = Map.class),
+                examples = @ExampleObject(
+                    name = "Example Top Book Search Response",
+                    summary = "Example response for top book search",
+                    value = "{\n" + 
+                    "  \"books\": [\n" + 
+                    "    {\n" + 
+                    "      \"id\": 1,\n" + 
+                    "      \"title\": \"Title of First Book\",\n" + 
+                    "      \"authors\": [\"Author1\", \"Author2\"],\n" + 
+                    "      \"languages\": [\"en\"],\n" + 
+                    "      \"downloadCount\": 42,\n" + 
+                    "      \"rating\": 4.5,\n" + 
+                    "      \"reviews\": \"Some review text...\"\n" + 
+                    "    },\n" + 
+                    "    {\n" + 
+                    "      \"id\": 2,\n" + 
+                    "      \"title\": \"Title of Second Book\",\n" + 
+                    "      \"authors\": [\"Author3\"],\n" + 
+                    "      \"languages\": [\"en\", \"es\"],\n" + 
+                    "      \"downloadCount\": 35,\n" + 
+                    "      \"rating\": 3.8,\n" + 
+                    "      \"reviews\": \"Another review text...\"\n" + 
+                    "    }\n" + 
+                    "  ]\n" + 
+                    "}" 
+        )
+            ))
     @GetMapping(value = "/top", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get top books", description = "Get the top N rated books")
     public Map<String, Object> getTopBooks(
@@ -193,6 +224,25 @@ public class BookController {
         }
     }
 
+    @ApiResponse(responseCode = "200", description = "Successful response", 
+                content = @Content(
+                    mediaType = "application/json", 
+                    schema = @Schema(implementation = Map.class),
+                    examples = @ExampleObject(
+                        name = "Example Average Rating Search Response",
+                        summary = "Example response for average rating search",
+                        value = "{\n" +
+                        "  \"monthlyRatings\": [\n" +
+                        "    {\n" +
+                        "      \"year\": 2023,\n" +
+                        "      \"month\": 11,\n" +
+                        "      \"averageRating\": 5\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  \"bookId\": 1\n" +
+                        "}"
+                    )
+                ))
     @GetMapping(value = "/averageRatingPerMonth", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get average rating per month for a book", description = "Returns the average rating per month for a given book ID")
     public Map<String, Object> getAverageRatingPerMonth(@RequestParam(value = "bookId") int bookId) {
