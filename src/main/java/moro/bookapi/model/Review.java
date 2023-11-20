@@ -1,6 +1,8 @@
 package moro.bookapi.model;
 
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,10 +27,14 @@ public class Review {
     @Column(length = 1000)
     private String reviewText;
 
+    @Column(nullable = false)
+    private LocalDateTime created_at;
+
     public Review(Long bookId, Integer rating, String reviewText) {
         this.bookId = bookId;
         this.rating = rating;
         this.reviewText = reviewText;
+        this.created_at = LocalDateTime.now();
     }
 
     public int getRating() {
@@ -42,5 +48,8 @@ public class Review {
     public String getReviewText() {
         return this.reviewText;
     }
-
+    
+    public LocalDateTime getTimestamp() {
+        return this.created_at;
+    }
 }

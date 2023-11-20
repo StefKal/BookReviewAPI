@@ -54,8 +54,8 @@ public class ReviewController {
             }
 
             // Insert review into the database
-            String sql = "INSERT INTO reviews (book_id, rating, review_text) VALUES (?, ?, ?)";
-            jdbcTemplate.update(sql, review.getBookId(), review.getRating(), review.getReviewText());
+            String sql = "INSERT INTO reviews (book_id, rating, review_text, created_at) VALUES (?, ?, ?, ?)";
+            jdbcTemplate.update(sql, review.getBookId(), review.getRating(), review.getReviewText(), review.getTimestamp());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(review);
         } catch (Exception e) {

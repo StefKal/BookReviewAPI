@@ -2,6 +2,8 @@ package moro.bookapi.controller;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,6 +15,7 @@ import org.springframework.boot.json.JsonParser;
 import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -27,6 +30,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import moro.bookapi.model.AuthorDto;
 import moro.bookapi.model.BookDto;
+import moro.bookapi.model.RatingDto;
 
 
 @RestController
@@ -140,5 +144,92 @@ public class BookController {
 
         return authorDtos;
     }
+
+    @GetMapping(value = "/top", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get top books", description = "Get the top N rated books")
+    public Map<String, Object> getTopBooks(
+        @RequestParam(value = "n", defaultValue = "10") int n
+    ){
+        if (n <= 0) {
+            return Collections.singletonMap("error", "Number must be a positive integer");
+        }
+    
+        String sql = "SELECT book_id, AVG(rating) as average_rating " +
+                     "FROM reviews GROUP BY book_id ORDER BY average_rating DESC LIMIT ?";
+    
+        RowMapper<BookDto> rowMapper = (rs, rowNum) -> {
+            BookDto book = new BookDto();
+            book.setId(rs.getInt("book_id"));
+            // Fetch book details from the Gutendex API or another source as needed
+            fetchBookDetails(book);
+            book.setRating(rs.getDouble("average_rating")); // Setting the average rating
+            return book;
+        };
+    
+        List<BookDto> topBooks = jdbcTemplate.query(sql, rowMapper, n);
+    
+        Map<String, Object> response = new HashMap<>();
+        response.put("books", topBooks);
+        return response;
+    }
+    
+    private void fetchBookDetails(BookDto book) {
+        String url = "https://gutendex.com/books?ids=" + book.getId();
+    
+        try {
+            String resp = restTemplate.getForObject(url, String.class);
+            JsonParser jsonParser = JsonParserFactory.getJsonParser();
+            Map<String, Object> responseMap = jsonParser.parseMap(resp);
+    
+            List<Map<String, Object>> results = (List<Map<String, Object>>) responseMap.get("results");
+            if (results != null && !results.isEmpty()) {
+                Map<String, Object> bookData = results.get(0); // Get the first book's details
+    
+                book.setTitle((String) bookData.get("title"));
+                book.setLanguages((List<String>) bookData.get("languages"));
+                book.setAuthors(extractAuthors(bookData));
+            }
+        } catch (RestClientException e) {
+        }
+    }
+
+    @GetMapping(value = "/averageRatingPerMonth", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get average rating per month for a book", description = "Returns the average rating per month for a given book ID")
+    public Map<String, Object> getAverageRatingPerMonth(@RequestParam(value = "bookId") int bookId) {
+        String sql = "SELECT strftime('%Y', created_at) as year, strftime('%m', created_at) as month, AVG(rating) as average_rating " +
+        "FROM reviews " +
+        "WHERE book_id = ? " +
+        "GROUP BY strftime('%Y', created_at), strftime('%m', created_at) " +
+        "ORDER BY year, month";
+
+        try {
+            RowMapper<RatingDto> rowMapper = new RowMapper<RatingDto>() {
+                @Override
+                public RatingDto mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    RatingDto monthlyRating = new RatingDto();
+                    monthlyRating.setYear(rs.getInt("year"));
+                    monthlyRating.setMonth(rs.getInt("month"));
+                    monthlyRating.setAverageRating(rs.getDouble("average_rating"));
+                    return monthlyRating;
+                }
+            };
+
+            List<RatingDto> monthlyRatings = jdbcTemplate.query(sql, rowMapper, bookId);
+
+            if (monthlyRatings.isEmpty()) {
+                return Collections.singletonMap("message", "No ratings found for the given book ID");
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("bookId", bookId);
+            response.put("monthlyRatings", monthlyRatings);
+            return response;
+        } catch (Exception e) {
+            return Collections.singletonMap("error", "An error occurred: " + e.getMessage());
+        }
+    }
+
+
+    
 }
 
