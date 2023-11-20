@@ -28,15 +28,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import moro.bookapi.model.AuthorDto;
 import moro.bookapi.model.BookDto;
 
+
 @RestController
 public class BookController {
-
     private final JdbcTemplate jdbcTemplate;
+    private final RestTemplate restTemplate;
 
-    public BookController(JdbcTemplate jdbcTemplate) {
+    public BookController(JdbcTemplate jdbcTemplate, RestTemplate restTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.restTemplate = restTemplate;
     }
-
     @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Search books", description = "Search for books by title")
     @ApiResponse(responseCode = "200", description = "Successful response", 
@@ -56,7 +57,6 @@ public class BookController {
 
         String encodedTitle = URLEncoder.encode(title, StandardCharsets.UTF_8);
         String url = "https://gutendex.com/books?search=" + encodedTitle;
-        RestTemplate restTemplate = new RestTemplate();
 
         try {
             // Make the API call and get the response as a Map

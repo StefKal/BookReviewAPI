@@ -49,7 +49,7 @@ public class ReviewController {
     public ResponseEntity<Review> submitReview(@RequestBody Review review) {
         try {
             // Validate the review
-            if (review.getRating() < 0 || review.getRating() > 5) {
+            if (review.getRating() < 0 || review.getRating() > 5 || review.getReviewText() == null) {
                 return ResponseEntity.badRequest().build();
             }
 
