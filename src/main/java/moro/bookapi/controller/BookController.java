@@ -54,6 +54,11 @@ public class BookController {
     public Map<String, Object> getBooks(
             @RequestParam(value = "title", defaultValue = "") String title,
             @RequestParam(value = "page", defaultValue = "1") int page) {
+        
+        // Enforce positive page number
+        if (page <= 0) {
+            return Collections.singletonMap("error", "Page number must be a positive integer");
+        }
 
         String encodedTitle = URLEncoder.encode(title, StandardCharsets.UTF_8);
         String url = "https://gutendex.com/books?search=" + encodedTitle;
