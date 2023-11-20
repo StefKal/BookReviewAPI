@@ -72,7 +72,6 @@ class BookControllerTests {
         // Call getBooks method
         Map<String, Object> response = bookController.getBooks("Test Book", 1);
 
-        // Assertions
         assertNotNull(response);
         assertEquals(1, response.get("count"));
     }
@@ -84,8 +83,6 @@ class BookControllerTests {
 
         // Call getBooks method with empty title
         Map<String, Object> response = bookController.getBooks("", 1);
-
-        // Assertions
         assertEquals(0, response.get("count"));
     }
 
@@ -94,8 +91,6 @@ class BookControllerTests {
         Map<String, Object> response = bookController.getBooks("Test Book", -1);
         // Check if the "error" key exists in the response
         assertTrue(response.containsKey("error"));
-
-        // Check if the value of the "error" key equals the expected error message
         assertEquals("Page number must be a positive integer", response.get("error"));    
     }
 
@@ -106,8 +101,6 @@ class BookControllerTests {
 
         // Call getBooks method and expect an error response
         Map<String, Object> response = bookController.getBooks("Test Book", 1);
-
-        // Assertions
         assertTrue(response.containsKey("error"));
     }
 }
