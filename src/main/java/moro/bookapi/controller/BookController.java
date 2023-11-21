@@ -13,15 +13,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.boot.json.JsonParser;
 import org.springframework.boot.json.JsonParserFactory;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -144,6 +148,28 @@ public class BookController {
 
         return authorDtos;
     }
+
+    @GetMapping(value = "/search/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get book by ID", description = "Retrieve a book and its details by ID")
+    @ApiResponse(responseCode = "200", description = "Successful response", 
+                 content = @Content(
+                     mediaType = "application/json", 
+                     schema = @Schema(implementation = BookDto.class)))
+    public BookDto getBookById(@PathVariable("id") int bookId) {
+        String url = "https://gutendex.com/books?ids=" + String.valueOf(bookId);
+        try {
+            String resp = restTemplate.getForObject(url, String.class);
+            JsonParser springParser = JsonParserFactory.getJsonParser();
+            Map<String, Object> map = springParser.parseMap(resp);
+           // Extract the relevant information from the response
+            List<Map<String, Object>> results = (List<Map<String, Object>>) map.get("results");
+            return extractBooks(results).get(0);
+
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred ", e);
+        }
+    }
+
 
     @ApiResponse(responseCode = "200", description = "Successful response", 
             content = @Content(

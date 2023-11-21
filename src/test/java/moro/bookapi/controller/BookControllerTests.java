@@ -21,6 +21,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import moro.bookapi.model.BookDto;
 import moro.bookapi.model.RatingDto;
@@ -216,5 +217,68 @@ class BookControllerTests {
         List<BookDto> topBooks = (List<BookDto>) response.get("books");
         assertEquals(4.5, topBooks.get(0).getRating());
         assertEquals(3.8, topBooks.get(1).getRating());
+    }
+
+    @Test
+    void getBookByIdSuccessTest() {
+        // Mock external API response
+        String mockApiResponse = "{\n" +
+                "  \"next\": null,\n" +
+                "  \"previous\": null,\n" +
+                "  \"count\": 1,\n" +
+                "  \"results\": [\n" +
+                "    {\n" +
+                "      \"id\": 1,\n" +
+                "      \"title\": \"Test Book\",\n" +
+                "      \"authors\": [\n" +
+                "        {\n" +
+                "          \"name\": \"Fitzgerald, F. Scott (Francis Scott)\",\n" +
+                "          \"birth_year\": 1896,\n" +
+                "          \"death_year\": 1940\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"languages\": [\n" +
+                "        \"en\"\n" +
+                "      ],\n" +
+                "      \"download_count\": 24469,\n" +
+                "      \"rating\": 2.6,\n" +
+                "      \"reviews\": [\n" +
+                "        \"Such a Great book\",\n" +
+                "        \"The worst book I've read\",\n" +
+                "        \"Noice\",\n" +
+                "        \"How to write reviews\",\n" +
+                "        \"bleh\"\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+        when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn(mockApiResponse);
+
+        // Call getBookById method
+        BookDto response = bookController.getBookById(1);
+
+        // Check that the response is not null and has the expected ID and title
+        assertNotNull(response);
+        assertEquals(1, response.getId());
+        assertEquals("Test Book", response.getTitle());
+    }
+
+    @Test
+    void getBookByIdNotFoundTest() {
+        // Mock RestTemplate response for no book found
+        String mockResponse = "{ \"results\": [] }";
+        when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn(mockResponse);
+
+        // Call getBookById method and expect a ResponseStatusException
+        assertThrows(ResponseStatusException.class, () -> bookController.getBookById(1));
+    }
+
+    @Test
+    void getBookByIdExceptionHandlingTest() {
+        // Simulate a RestClientException
+        when(restTemplate.getForObject(anyString(), eq(String.class))).thenThrow(new RestClientException("Error"));
+
+        // Call getBookById method and expect a ResponseStatusException
+        assertThrows(ResponseStatusException.class, () -> bookController.getBookById(1));
     }
 }

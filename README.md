@@ -3,7 +3,8 @@ This document provides instructions for using the endpoints of a RESTful API des
 
 ## Features
 
-- Search books by title
+- Search books by title (Paginated)
+- Retrieve a specific book by ID
 - Submit a book review
 - Get top "N" reviewed books
 - Get average rating per month of a book
