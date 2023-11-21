@@ -71,3 +71,6 @@ Responses to invalid requests will include an appropriate HTTP status code and, 
 ```
 > mvn test
 ```
+
+## How I would implement a Cache
+![Cache](Cache.png)
